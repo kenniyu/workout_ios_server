@@ -17,12 +17,17 @@ class User < ActiveRecord::Base
       exercise_category = ExerciseCategory.find_by_id(k)
       exercises = []
       v.each do |exercise|
-        exercise_data = {:exercise_id => exercise.id, :exercise_name => exercise.name}
+        exercise_data = {
+          :exercise_id => exercise.id,
+          :exercise_name => exercise.name,
+          :category_id => exercise_category.id,
+          :category_name => exercise_category.name
+        }
         exercises << exercise_data
       end
-      data = { :category_id => exercise_category.id, :category_name => exercise_category.name, :exercises => exercises }
-      final << data
+      final << exercises
     end
+    puts final
     return final
   end
 end
