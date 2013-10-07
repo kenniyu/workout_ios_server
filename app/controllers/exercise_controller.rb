@@ -24,4 +24,28 @@ class ExerciseController < ActionController::Base
 
   def new
   end
+
+  def search
+    query = params[:query]
+    @exercises = []
+    if query.blank?
+      exercises = Exercise.order("name asc").group_by{|exercise| exercise.name[0]}
+    else
+      exercises = Exercise.where(["name like ?", "%#{query}%"]).group_by{|exercise| exercise.name[0]}
+    end
+
+    exercises.each do |section_title, values|
+      @exercises << {
+                      :title => section_title,
+                      :values => values
+                    }
+    end
+
+    logger.debug(exercises)
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @exercises.to_json }
+    end
+  end
 end

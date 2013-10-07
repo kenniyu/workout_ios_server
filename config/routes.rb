@@ -15,6 +15,12 @@ WorkoutIos::Application.routes.draw do
   match 'api/exercise_categories/index' => 'exercise_category#index', :as => :exercise_categories
   match 'api/exercise/create' => 'exercise#create', :as => :create_exercise
   match 'api/user/exercises' => 'user#exercises', :as => :user_exercises
+  match 'api/user/exercise_sets' => 'user#exercise_sets', :as => :user_exercise_sets
+  match 'api/user/exercise_sets/delete' => 'user#delete_exercise_set' , :as => :user_delete_exercise_set
+  match 'api/user/exercise_set/batch_update' => 'user#batch_update_exercise_set' , :as => :user_batch_update_exercise_set
+  match 'api/exercise_set/create' => 'exercise_set#create', :as => :create_exercise_set
+
+  match 'api/exercise/search' => 'exercise#search', :as => :search_exercises
   # This route can be invoked with purchase_url(:id => product.id)
 
   # Sample resource route (maps HTTP verbs to controller actions automatically):

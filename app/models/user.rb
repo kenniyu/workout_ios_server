@@ -9,6 +9,7 @@ class User < ActiveRecord::Base
   # attr_accessible :title, :body
   #
   has_many :exercises
+  has_many :exercise_sets
 
   def get_grouped_exercises
     final = []
@@ -29,5 +30,45 @@ class User < ActiveRecord::Base
     end
     puts final
     return final
+  end
+
+  def get_grouped_sets(exercise_id)
+    sets = ExerciseSet.where(:user_id => self.id, :exercise_id => exercise_id)
+
+    set_data = []
+    sets.each_with_index do |set, index|
+      set_hash = {
+        :name => "Set #{index + 1}",
+        :id => set.id,
+        :details => [
+          {
+            :label => "weight",
+            :value => set.weight.to_f
+          },
+          {
+            :label => "reps",
+            :value => set.reps
+          }
+        ]
+      }
+      set_data << set_hash
+    end
+    return set_data
+  end
+
+  def get_listed_sets(exercise_id)
+    sets = ExerciseSet.where(:user_id => self.id, :exercise_id => exercise_id)
+    set_data = []
+    sets.each_with_index do |set, index|
+      set_hash = {
+        :id => set.id,
+        :set_number => index + 1,
+        :weight => set.weight.to_f,
+        :reps => set.reps,
+        :exercise_id => exercise_id
+      }
+      set_data << set_hash
+    end
+    return set_data
   end
 end

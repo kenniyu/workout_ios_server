@@ -11,12 +11,26 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20131004072608) do
+ActiveRecord::Schema.define(:version => 20131007030528) do
+
+  create_table "equipment", :force => true do |t|
+    t.string   "name"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
 
   create_table "exercise_categories", :force => true do |t|
     t.string   "name"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+  end
+
+  create_table "exercise_muscles", :force => true do |t|
+    t.integer  "exercise_id"
+    t.string   "focus"
+    t.integer  "muscle_id"
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
   end
 
   create_table "exercise_sets", :force => true do |t|
@@ -25,14 +39,25 @@ ActiveRecord::Schema.define(:version => 20131004072608) do
     t.integer  "reps"
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
+    t.decimal  "weight"
   end
 
   create_table "exercises", :force => true do |t|
     t.string   "name"
-    t.integer  "user_id"
-    t.integer  "exercise_category_id"
-    t.datetime "created_at",           :null => false
-    t.datetime "updated_at",           :null => false
+    t.datetime "created_at",     :null => false
+    t.datetime "updated_at",     :null => false
+    t.integer  "equipment_id"
+    t.string   "exercise_type"
+    t.string   "force"
+    t.string   "level"
+    t.string   "mechanics_type"
+  end
+
+  create_table "muscles", :force => true do |t|
+    t.string   "alias"
+    t.string   "name"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "products", :force => true do |t|
