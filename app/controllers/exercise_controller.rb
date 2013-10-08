@@ -27,11 +27,21 @@ class ExerciseController < ActionController::Base
 
   def search
     query = params[:query]
+    filter = params[:filter] || "alphabetical"
     @exercises = []
     if query.blank?
-      exercises = Exercise.order("name asc").group_by{|exercise| exercise.name[0]}
+      exercises = Exercise.select("exercises.name, exercises.id, exercises.exercise_type, 
+      (select muscles.name from muscles where muscles.id in
+        (select exercise_muscles.muscle_id from exercise_muscles where exercise_muscles.exercise_id = exercises.id)
+        ) as muscle_name").order("exercises.name asc").includes([:exercise_muscle => :muscle ]).group_by{|exercise| exercise.name[0]}
     else
-      exercises = Exercise.where(["name like ?", "%#{query}%"]).group_by{|exercise| exercise.name[0]}
+      exercises = Exercise.select("exercises.name, exercises.id, exercises.exercise_type, 
+      (select muscles.name from muscles where muscles.id in
+        (select exercise_muscles.muscle_id from exercise_muscles where exercise_muscles.exercise_id = exercises.id)
+        ) as muscle_name").where(["
+      (select muscles.name from muscles where muscles.id in
+        (select exercise_muscles.muscle_id from exercise_muscles where exercise_muscles.exercise_id = exercises.id)
+        ) like ? or name like ? or exercise_type like ?", "%#{query}%", "%#{query}%", "%#{query}%"]).includes([:exercise_muscle]).group_by{|exercise| exercise.name[0]}
     end
 
     exercises.each do |section_title, values|
@@ -45,7 +55,7 @@ class ExerciseController < ActionController::Base
 
     respond_to do |format|
       format.html
-      format.json { render json: @exercises.to_json }
+      format.json { render json: @exercises.as_json(except: [:force, :level, :mechanics_type, :updated_at, :created_at], include: { exercise_muscle: { include: { muscle: { only: :name } }, only: :muscle_id } }) }
     end
   end
 end
