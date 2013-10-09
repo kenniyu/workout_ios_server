@@ -1,4 +1,6 @@
 class UserController < ActionController::Base
+  before_filter :authenticate_user!
+
   def exercises
     user = User.find_by_authentication_token(params[:auth_token])
     if user.present?
@@ -90,5 +92,69 @@ class UserController < ActionController::Base
     else
       render :nothing => true and return
     end
+  end
+
+
+  def save_routine
+    exercise_ids = params[:exercise_ids]
+    routine_name = params[:routine_name]
+    routine_description = params[:routine_description]
+
+    user = User.find_by_authentication_token(params[:auth_token])
+    if user.present? && exercise_ids.present?
+      routine_data = Routine.analyze(routine_name, routine_description)
+      if routine_data
+        tags = routine_data[:tags].uniq
+        description = routine_data[:description]
+        name = routine_data[:name]
+        @routine = Routine.new(:name => name, :description => description, :creator_id => user.id)
+        if @routine.save
+          routine = @routine.reload
+          routine_id = routine.id
+
+          # create tags and associations
+          tags.each do |tag_name|
+            tag = Tag.find_or_create_by_name(tag_name)
+
+            # create assocation
+            RoutineTag.create(:routine_id => routine_id, :tag_id => tag.id)
+          end
+
+          # create exercise associations
+          exercise_ids_arr = exercise_ids.split(',')
+          exercises = Exercise.where(["id in (?)", exercise_ids_arr])
+          exercises.each do |exercise|
+            RoutineExercise.create(:routine_id => routine_id, :exercise_id => exercise.id)
+          end
+
+          @response = {
+            :status => :success,
+            :message => "Routine saved!"
+          }
+        else
+          @response = {
+            :status => :fail,
+            :message => "Could not save routine"
+          }
+        end
+      else
+        # no routine data
+        @response = {
+          :status => :fail,
+          :message => "Could not save routine"
+        }
+      end
+    else
+      # no user
+      @response = {
+        :status => :fail,
+        :message => "Invalid user."
+      }
+    end
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @response }
+    end
+
   end
 end

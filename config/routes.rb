@@ -18,7 +18,11 @@ WorkoutIos::Application.routes.draw do
   match 'api/user/exercise_sets' => 'user#exercise_sets', :as => :user_exercise_sets
   match 'api/user/exercise_sets/delete' => 'user#delete_exercise_set' , :as => :user_delete_exercise_set
   match 'api/user/exercise_set/batch_update' => 'user#batch_update_exercise_set' , :as => :user_batch_update_exercise_set
+  match 'api/user/save_routine' => 'user#save_routine' , :as => :user_save_routine
   match 'api/exercise_set/create' => 'exercise_set#create', :as => :create_exercise_set
+
+  match 'api/routines' => 'routine#index', :as => :routines
+  match 'api/routine' => 'routine#get', :as => :routine
 
   match 'api/exercise/search' => 'exercise#search', :as => :search_exercises
   # This route can be invoked with purchase_url(:id => product.id)

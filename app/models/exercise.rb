@@ -8,4 +8,7 @@ class Exercise < ActiveRecord::Base
 
   has_many :primary_muscles, :through => :exercise_muscle, :source => :muscle, :foreign_key => :exercise, :conditions => ["focus = ?", "primary"]
   has_many :secondary_muscles, :through => :exercise_muscle, :source => :muscle, :foreign_key => :exercise, :conditions => ["focus = ?", "secondary"]
+
+  has_many :routine_exercises
+  has_many :routines, :through => :routine_exercises
 end
