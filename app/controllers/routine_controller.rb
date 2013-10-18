@@ -76,14 +76,18 @@ class RoutineController < ApplicationController
 
     if user.present? && routine_id > 0
       routine = Routine.find_by_id(routine_id)
+
       if routine.present?
-        if UserRoutineExercise.exists?(:routine_id => routine.id, :user_id => user.id)
-          # we have already created the batch entries for this user and this routine, so return
+        # first check to see if a user with this routine has session that is incomplete
+        if UserRoutineSession.exists?(:routine_id => routine.id, :user_id => user.id, :status => "incomplete")
+          # we cannot start a new routine since an ongoing one exists
           @response = {
             :status => :fail,
             :message => "User exercise routines already exist for this user. User has already started this routine"
           }
         else
+          # create a new session and mark as incomplete
+          user_routine_session = UserRoutineSession.create(:routine_id => routine.id, :user_id => user.id, :status => "incomplete")
           # need to batch create userroutineexercises entries for this user and routine
           routine_exercises = routine.exercises
           exercise_ids = routine_exercises.map(&:id)
@@ -92,6 +96,7 @@ class RoutineController < ApplicationController
           end
           @response = {
             :status => :success,
+            :session_id => user_routine_session.id,
             :message => "Created user exercise routines"
           }
         end
@@ -133,6 +138,61 @@ class RoutineController < ApplicationController
             :message => "Completed user exercise routine"
           }
         else
+          @response = {
+            :status => :fail,
+            :message => "Could not update user exercise routine"
+          }
+        end
+      else
+        @response = {
+          :status => :fail,
+          :message => "Matching routine and exercise do not exist"
+        }
+      end
+    else
+      @response = {
+        :status => :fail,
+        :message => "Invalid user or routine"
+      }
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @response.to_json }
+    end
+  end
+
+  def complete_routine
+    user = User.find_by_authentication_token(params[:auth_token])
+    routine_id = params[:routine_id].to_i
+    if user.present? && routine_id > 0
+      routine = Routine.find_by_id(routine_id)
+      if routine.present?
+        # check all user routine exercises
+        user_routine_exercises = UserRoutineExercise.find_all_by_user_id_and_routine_id(user.id, routine.id)
+
+            logger.debug(user_routine_exercises.length)
+            logger.debug(user_routine_exercises.map(&:status).uniq())
+
+        if user_routine_exercises.length > 0 && user_routine_exercises.map(&:status).uniq() == ["completed"]
+          # valid to complete
+          current_user_routine_session = UserRoutineSession.find_by_user_id_and_routine_id_and_status(user.id, routine.id, "incomplete")
+          if current_user_routine_session
+            current_user_routine_session.status = "complete"
+            current_user_routine_session.save
+            @response = {
+              :status => :success,
+              :message => "Completed user exercise routine"
+            }
+          else
+            logger.debug("could not complete the user routine session inner fail")
+            @response = {
+              :status => :fail,
+              :message => "Could not update user exercise routine"
+            }
+          end
+        else
+          logger.debug("could not complete the user routine session")
           @response = {
             :status => :fail,
             :message => "Could not update user exercise routine"

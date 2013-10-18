@@ -24,6 +24,7 @@ WorkoutIos::Application.routes.draw do
   match 'api/routines' => 'routine#index', :as => :routines
   match 'api/routine' => 'routine#get', :as => :routine
   match 'api/routine/complete_exercise' => 'routine#complete_exercise', :as => :routine_complete_exercise
+  match 'api/routine/complete_routine' => 'routine#complete_routine', :as => :routine_complete_routine
   match 'api/routine/start' => 'routine#start', :as => :routine_start
 
   match 'api/exercise/search' => 'exercise#search', :as => :search_exercises
