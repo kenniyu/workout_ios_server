@@ -122,9 +122,12 @@ class UserController < ActionController::Base
 
           # create exercise associations
           exercise_ids_arr = exercise_ids.split(',')
-          exercises = Exercise.where(["id in (?)", exercise_ids_arr])
-          exercises.each do |exercise|
-            RoutineExercise.create(:routine_id => routine_id, :exercise_id => exercise.id)
+          exercises = Exercise.where(["id in (?)", exercise_ids_arr]).group_by {|exercise| exercise.id}
+          exercise_ids_arr.each do |exercise_id|
+            if exercises[exercise_id.to_i]
+              RoutineExercise.create(:routine_id => routine_id, :exercise_id => exercise_id)
+              logger.debug("created")
+            end
           end
 
           @response = {

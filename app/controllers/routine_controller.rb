@@ -37,18 +37,37 @@ class RoutineController < ApplicationController
   def get
     user = User.find_by_authentication_token(params[:auth_token])
     routine_id = params[:routine_id].to_i
+
     if user.present? && routine_id > 0
       routine = Routine.find_by_id(routine_id)
+
       if routine.present?
-        # find out if the user has already started this routine
-        existingUserRoutineExercises = UserRoutineExercise.where(:user_id => user.id, :routine_id => routine_id)
-        if existingUserRoutineExercises.present?
-          # they already exist, so return these guys
-          @response = existingUserRoutineExercises.order('status desc, updated_at asc')
+        # find out if the user has already started a session with this routine
+        existing_user_routine_session = UserRoutineSession.where(:routine_id => routine_id, :user_id => user.id).order("created_at desc")
+        if existing_user_routine_session.present?
+          # There were routine sessions from before
+          # Get the most recent one, which would be the last one
+          # and check to see if it's complete
+          most_recent_user_routine_session = existing_user_routine_session.first
+
+          if most_recent_user_routine_session.status == "completed"
+            # we need to make a brand new routine
+            UserRoutineSession.create(:routine_id => routine_id, :status => "incomplete", :user_id => user.id)
+          else
+            # we have an ongoing routine, do nothing
+          end
+
+          # fetch the user routine exercises
+          @exercises = routine.exercises.includes([:routine_exercises]).order("routine_exercises.created_at asc")
+
+=begin
+          user_routine_exercises = UserRoutineExercise.where(:routine_id => routine_id, :user_id => user.id)
+          @response = user_routine_exercises.order("status desc, updated_at asc")
           render json: @response.as_json(include: :exercise) and return
+=end
         else
         # otherwise
-          @exercises = routine.exercises.order("created_at asc")
+          @exercises = routine.exercises.includes([:routine_exercises]).order("routine_exercises.created_at asc")
         end
         @response = @exercises
       else
@@ -167,37 +186,15 @@ class RoutineController < ApplicationController
     routine_id = params[:routine_id].to_i
     if user.present? && routine_id > 0
       routine = Routine.find_by_id(routine_id)
-      if routine.present?
-        # check all user routine exercises
-        user_routine_exercises = UserRoutineExercise.find_all_by_user_id_and_routine_id(user.id, routine.id)
-
-            logger.debug(user_routine_exercises.length)
-            logger.debug(user_routine_exercises.map(&:status).uniq())
-
-        if user_routine_exercises.length > 0 && user_routine_exercises.map(&:status).uniq() == ["completed"]
-          # valid to complete
-          current_user_routine_session = UserRoutineSession.find_by_user_id_and_routine_id_and_status(user.id, routine.id, "incomplete")
-          if current_user_routine_session
-            current_user_routine_session.status = "complete"
-            current_user_routine_session.save
-            @response = {
-              :status => :success,
-              :message => "Completed user exercise routine"
-            }
-          else
-            logger.debug("could not complete the user routine session inner fail")
-            @response = {
-              :status => :fail,
-              :message => "Could not update user exercise routine"
-            }
-          end
-        else
-          logger.debug("could not complete the user routine session")
-          @response = {
-            :status => :fail,
-            :message => "Could not update user exercise routine"
-          }
-        end
+      user_routine_session = UserRoutineSession.find_by_user_id_and_routine_id_and_status(user.id, routine.id, "incomplete")
+      if routine.present? and user_routine_session.present?
+        # valid to complete
+        user_routine_session.status = "complete"
+        user_routine_session.save
+        @response = {
+          :status => :success,
+          :message => "Completed user exercise routine"
+        }
       else
         @response = {
           :status => :fail,
