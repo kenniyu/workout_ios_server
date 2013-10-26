@@ -71,4 +71,12 @@ class User < ActiveRecord::Base
     end
     return set_data
   end
+
+  def get_profile_data
+    user_routine_sessions = UserRoutineSession.where(:user_id => self.id, :status => "complete")
+    profile_data = {
+      :completed_sessions => user_routine_sessions.size
+    }
+    return profile_data
+  end
 end

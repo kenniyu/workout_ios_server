@@ -160,4 +160,22 @@ class UserController < ActionController::Base
     end
 
   end
+
+  def profile
+    user = User.find_by_authentication_token(params[:auth_token])
+    if user.present?
+      profile_data = user.get_profile_data
+      @response = profile_data
+    else
+      @response = {
+        :status => :fail,
+        :message => "Invalid user."
+      }
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @response }
+    end
+  end
 end

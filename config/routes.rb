@@ -19,6 +19,7 @@ WorkoutIos::Application.routes.draw do
   match 'api/user/exercise_sets/delete' => 'user#delete_exercise_set' , :as => :user_delete_exercise_set
   match 'api/user/exercise_set/batch_update' => 'user#batch_update_exercise_set' , :as => :user_batch_update_exercise_set
   match 'api/user/save_routine' => 'user#save_routine' , :as => :user_save_routine
+  match 'api/user/profile' => 'user#profile' , :as => :user_profile
 
   match 'api/routines' => 'routine#index', :as => :routines
   match 'api/routine' => 'routine#get', :as => :routine
