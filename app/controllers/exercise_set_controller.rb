@@ -36,21 +36,36 @@ class ExerciseSetController < ActionController::Base
     end
   end
 
+  # really misleading
+  # gets all sets existing for this exercise, as well as previous sessions
   def get
     user = User.find_by_authentication_token(params[:auth_token])
-    session_id = params[:session_id]
-    session = UserRoutineSession.find_by_id(session_id)
+    ###session_id = params[:session_id]
+    ###session = UserRoutineSession.find_by_id(session_id)
     exercise_id = params[:exercise_id]
     exercise = Exercise.find_by_id(exercise_id)
+    routine_id = params[:routine_id]
+    routine = Routine.find_by_id(routine_id)
+    current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "incomplete", :routine_id => routine.id).order("created_at desc").first
+    last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
 
-    if user.present? && session.present? && exercise.present?
-      exercise_sets = ExerciseSet.where(:user_id => user.id, :session_id => session.id, :exercise_id => exercise.id)
-    end
+    if user.present? && exercise.present?
+      # get the current routines exercise sets
+      current_exercise_sets = []
+      if current_ongoing_routine_session.present?
+        current_exercise_sets = ExerciseSet.where(:user_id => user.id, :session_id => current_ongoing_routine_session.id, :exercise_id => exercise.id)
+      end
 
-    if exercise_sets.present?
+      # also fetch the previous routines exercise sets, if we have it
+      prev_exercise_sets = []
+      if last_completed_routine_session.present?
+        prev_exercise_sets = ExerciseSet.where(:user_id => user.id, :session_id => last_completed_routine_session.id, :exercise_id => exercise.id)
+      end
+
       @response = {
         :status => :success,
-        :exercise_sets => exercise_sets
+        :exercise_sets => current_exercise_sets,
+        :previous_sets => prev_exercise_sets
       }
     else
       @response = {
