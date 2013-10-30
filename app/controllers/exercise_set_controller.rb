@@ -46,8 +46,16 @@ class ExerciseSetController < ActionController::Base
     exercise = Exercise.find_by_id(exercise_id)
     routine_id = params[:routine_id]
     routine = Routine.find_by_id(routine_id)
-    current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "incomplete", :routine_id => routine.id).order("created_at desc").first
-    last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
+
+    if params[:routine_state] == "completed"
+      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
+      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").second
+      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").third
+    else
+      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "incomplete", :routine_id => routine.id).order("created_at desc").first
+      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
+      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").second
+    end
 
     if user.present? && exercise.present?
       # get the current routines exercise sets
@@ -62,10 +70,17 @@ class ExerciseSetController < ActionController::Base
         prev_exercise_sets = ExerciseSet.where(:user_id => user.id, :session_id => last_completed_routine_session.id, :exercise_id => exercise.id)
       end
 
+      # and the one before that too...
+      pre_prev_exercise_sets = []
+      if pre_last_completed_routine_session.present?
+        pre_prev_exercise_sets = ExerciseSet.where(:user_id => user.id, :session_id => pre_last_completed_routine_session.id, :exercise_id => exercise.id)
+      end
+
       @response = {
         :status => :success,
         :exercise_sets => current_exercise_sets,
-        :previous_sets => prev_exercise_sets
+        :previous_sets => prev_exercise_sets,
+        :pre_previous_sets => pre_prev_exercise_sets
       }
     else
       @response = {
