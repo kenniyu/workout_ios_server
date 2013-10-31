@@ -47,7 +47,8 @@ class ExerciseSetController < ActionController::Base
     routine_id = params[:routine_id]
     routine = Routine.find_by_id(routine_id)
 
-    if params[:routine_state] == "completed"
+    most_recent_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id).order("created_at desc").first
+    if most_recent_routine_session.status == "complete"
       current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
       last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").second
       pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").third
