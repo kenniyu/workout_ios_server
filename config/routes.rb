@@ -31,6 +31,9 @@ WorkoutIos::Application.routes.draw do
   match 'api/exercise_set/create' => 'exercise_set#create', :as => :create_exercise_set
   match 'api/exercise_set/get' => 'exercise_set#get', :as => :get_exercise_set
 
+  match 'api/career/all' => 'career#get', :as => :get_career_progress
+  match 'api/career/exercises' => 'career#exercises', :as => :get_career_exercises
+
   match 'api/exercise/search' => 'exercise#search', :as => :search_exercises
   # This route can be invoked with purchase_url(:id => product.id)
 
