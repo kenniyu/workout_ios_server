@@ -40,22 +40,19 @@ class ExerciseSetController < ActionController::Base
   # gets all sets existing for this exercise, as well as previous sessions
   def get
     user = User.find_by_authentication_token(params[:auth_token])
-    ###session_id = params[:session_id]
-    ###session = UserRoutineSession.find_by_id(session_id)
-    exercise_id = params[:exercise_id]
     exercise = Exercise.find_by_id(exercise_id)
     routine_id = params[:routine_id]
     routine = Routine.find_by_id(routine_id)
 
     most_recent_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id).order("created_at desc").first
     if most_recent_routine_session.status == "complete"
-      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
-      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").second
-      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").third
+      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").first
+      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").second
+      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").third
     else
-      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "incomplete", :routine_id => routine.id).order("created_at desc").first
-      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").first
-      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete", :routine_id => routine.id).order("created_at desc").second
+      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "incomplete").order("created_at desc").first
+      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").first
+      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").second
     end
 
     if user.present? && exercise.present?
