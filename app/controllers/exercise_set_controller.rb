@@ -40,6 +40,7 @@ class ExerciseSetController < ActionController::Base
   # gets all sets existing for this exercise, as well as previous sessions
   def get
     user = User.find_by_authentication_token(params[:auth_token])
+    exercise_id = params[:exercise_id]
     exercise = Exercise.find_by_id(exercise_id)
     routine_id = params[:routine_id]
     routine = Routine.find_by_id(routine_id)
