@@ -84,4 +84,28 @@ class CareerController < ApplicationController
       format.json { render json: @response.to_json }
     end
   end
+
+  def routines
+    user = User.find_by_authentication_token(params[:auth_token])
+    if user.present?
+      routines = Routine.where("id in (select routine_id from user_routine_sessions where user_id = #{user.id} and status = 'complete')")
+=begin
+      user_routine_sessions = UserRoutineSession.where(["user_id = ? and status = ?", user.id, "complete"]).order("create
+      routine_completion_times = ExerciseSet.where("session_id in (select id from user_routine_sessions where user_routine_sessions.routine_id = #{routine
+=end
+      @response = {
+        :status => :success,
+        :routines => routines
+      }
+    else
+      @response = {
+        :status => :fail
+      }
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @response.to_json }
+    end
+  end
 end
