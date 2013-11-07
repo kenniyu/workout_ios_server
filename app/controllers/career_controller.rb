@@ -88,15 +88,26 @@ class CareerController < ApplicationController
   def routines
     user = User.find_by_authentication_token(params[:auth_token])
     if user.present?
-      routines = Routine.where("id in (select routine_id from user_routine_sessions where user_id = #{user.id} and status = 'complete')")
-      most_recent_user_routine_sessions = UserRoutineSession.where(["routine_id in (?) and status = ?", routines.map(&:id), "complete"])
-                                                            .order("created_at desc")
+      completed_routines = Routine.where("id in (select routine_id from user_routine_sessions where user_id = #{user.id} and status = 'complete')")
+      most_recent_user_routine_sessions = UserRoutineSession.where(["routine_id in (?) and status = ?", completed_routines.map(&:id), "complete"])
+                                                            .order("updated_at desc")
                                                             .group("routine_id")
-                                                            .select("routine_id, updated_at")
+      # group the routines by routine id
+      grouped_completed_routines = completed_routines.group_by{|routine| routine.id}
+
+      routine_data = []
+      most_recent_user_routine_sessions.each do |session|
+        datum = {
+          :routine_id => session.routine_id,
+          :name => grouped_completed_routines[session.routine_id].first.name,
+          :completion_time => session.updated_at
+        }
+        routine_data << datum
+      end
+
       @response = {
         :status => :success,
-        :routines => routines,
-        :completion_times => most_recent_user_routine_sessions.group_by{|session| session.routine_id}
+        :routines => routine_data
       }
     else
       @response = {
