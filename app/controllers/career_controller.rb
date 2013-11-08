@@ -124,7 +124,7 @@ class CareerController < ApplicationController
   def routine_exercises
     user = User.find_by_authentication_token(params[:auth_token])
     routine_id = params[:routine_id]
-    routine = Routine.where(:id => routine_id)
+    routine = Routine.find_by_id(routine_id)
 
     if user.present? && routine.present?
       # find all of this routine's sessions
