@@ -157,8 +157,6 @@ class CareerController < ApplicationController
           # push necessary data to array
           formatted_data.push({
             :session_id => session_id,
-            :exercise_id => exercise_id,
-            :exercise_name => exercise_name,
             :total_workload => total_workload,
             :working_time => working_time,
             :finish_time => finish_time
