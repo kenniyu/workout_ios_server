@@ -120,4 +120,69 @@ class CareerController < ApplicationController
       format.json { render json: @response.to_json }
     end
   end
+
+  def routine_exercises
+    user = User.find_by_authentication_token(params[:auth_token])
+    routine_id = params[:routine_id]
+    routine = Routine.where(:id => routine_id)
+
+    if user.present? && routine.present?
+      # find all of this routine's sessions
+      user_routine_sessions = UserRoutineSession.where(:routine_id => routine.id, :status => "complete").order("updated_at desc").limit(5)
+      user_routine_session_ids = user_routine_sessions.map(&:id)
+
+      all_exercise_sets = ExerciseSet.where(["session_id in (?)", user_routine_session_ids]).includes(:exercise)
+      exercise_grouped_exercise_sets = all_exercise_sets.group_by{|set| set.exercise_id}
+
+
+      exercise_arr = []
+
+      exercise_grouped_exercise_sets.each do |exercise_id, exercise_sets|
+        formatted_data = []
+        session_grouped_exercise_sets = exercise_sets.group_by{|set| set.session_id}
+        session_grouped_exercise_sets.each do |session_id, sets|
+          total_workload = 0
+          working_time = 0
+          finish_time = 0
+
+          sets.each do |set|
+            rep = set.reps
+            weight = set.weight
+            workload = rep * weight
+            total_workload += workload
+            working_time += set.working_time
+            finish_time = set.created_at
+          end
+
+          # push necessary data to array
+          formatted_data.push({
+            :session_id => session_id,
+            :exercise_id => exercise_id,
+            :exercise_name => exercise_name,
+            :total_workload => total_workload,
+            :working_time => working_time,
+            :finish_time => finish_time
+          })
+        end
+
+        exercise_data = {
+          :id => exercise_id,
+          :name => exercise_sets.first.exercise.name,
+          :formatted_data => formatted_data
+        }
+
+        # push exercise_data to our array that we will return
+        exercise_arr << exercise_data
+      end
+
+      @response = {
+        :exercises => exercise_arr
+      }
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @response.to_json }
+    end
+  end
 end

@@ -3,4 +3,5 @@ class ExerciseSet < ActiveRecord::Base
   belongs_to :user
 
   belongs_to :user_routine_session, :foreign_key => :session
+  belongs_to :exercise
 end
