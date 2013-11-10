@@ -47,13 +47,13 @@ class ExerciseSetController < ActionController::Base
 
     most_recent_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id).order("created_at desc").first
     if most_recent_routine_session.status == "complete"
-      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").first
-      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").second
-      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").third
+      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id, :status => "complete").order("created_at desc").first
+      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id, :status => "complete").order("created_at desc").second
+      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id, :status => "complete").order("created_at desc").third
     else
-      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "incomplete").order("created_at desc").first
-      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").first
-      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :status => "complete").order("created_at desc").second
+      current_ongoing_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id, :status => "incomplete").order("created_at desc").first
+      last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id, :status => "complete").order("created_at desc").first
+      pre_last_completed_routine_session = UserRoutineSession.where(:user_id => user.id, :routine_id => routine.id, :status => "complete").order("created_at desc").second
     end
 
     if user.present? && exercise.present?

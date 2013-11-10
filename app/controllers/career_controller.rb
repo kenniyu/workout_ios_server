@@ -22,7 +22,8 @@ class CareerController < ApplicationController
     exercise_id = params[:exercise_id]
 
     if user.present?
-      exercise_ids = ExerciseSet.where(:user_id => user.id).order("created_at desc").map(&:exercise_id).uniq()
+      exercise_sets = ExerciseSet.where(:user_id => user.id).order("created_at desc").group("exercise_id").includes(&:exercise)
+      exercise_ids = exercise_sets.map(&:exercise_id)
       if exercise_ids.blank?
         # user has completed 0 exercises
         routine_grouped_exercise_sets = {}
@@ -52,6 +53,8 @@ class CareerController < ApplicationController
           total_workload = 0
           working_time = 0
           finish_time = 0
+          details = []
+
           session_exercise_sets.each do |set|
             rep = set.reps
             weight = set.weight
@@ -59,6 +62,10 @@ class CareerController < ApplicationController
             total_workload += workload
             working_time += set.working_time
             finish_time = set.created_at
+            details << {
+              :weight => weight,
+              :reps => rep
+            }
           end
 
           # store in data
@@ -68,7 +75,8 @@ class CareerController < ApplicationController
             :exercise_name => exercise_name,
             :total_workload => total_workload,
             :working_time => working_time,
-            :finish_time => finish_time
+            :finish_time => finish_time,
+            :details => details
           })
         end
       end
@@ -144,6 +152,7 @@ class CareerController < ApplicationController
           total_workload = 0
           working_time = 0
           finish_time = 0
+          details = []
 
           sets.each do |set|
             rep = set.reps
@@ -152,6 +161,10 @@ class CareerController < ApplicationController
             total_workload += workload
             working_time += set.working_time
             finish_time = set.created_at
+            details << {
+              :weight => weight,
+              :reps => rep
+            }
           end
 
           # push necessary data to array
@@ -159,7 +172,8 @@ class CareerController < ApplicationController
             :session_id => session_id,
             :total_workload => total_workload,
             :working_time => working_time,
-            :finish_time => finish_time
+            :finish_time => finish_time,
+            :details => details
           })
         end
 
