@@ -25,9 +25,35 @@ class RoutineController < ApplicationController
         end
       end
 
+      @user_routine_sessions = UserRoutineSession.where(:user_id => user.id)
+      user_routine_sessions_data = {}
+
+      @user_routine_sessions.each do |session|
+        status = session.status == "complete" ? "terminated" : "ongoing"
+        count = session.status == "complete" ? 1 : 0
+        if !user_routine_sessions_data[session.routine_id]
+          user_routine_sessions_data[session.routine_id] = {
+            :times_completed => count,
+            :status => status
+          }
+        else
+          if status != "ongoing"
+            # only update count and status is not ongoing
+            user_routine_sessions_data[session.routine_id][:times_completed] += 1
+          else
+            user_routine_sessions_data[session.routine_id][:status] = status
+          end
+        end
+      end
+
+      @response = {
+        :routines => @routines,
+        :user_routine_sessions => user_routine_sessions_data
+      }
+
       respond_to do |format|
         format.html # index.html.erb
-        format.json { render json: @routines.to_json }
+        format.json { render json: @response.to_json }
       end
     else
       render :nothing => true and return
