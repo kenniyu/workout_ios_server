@@ -9,19 +9,19 @@ class RoutineController < ApplicationController
 
       if query.blank?
         if filter == "all"
-          @routines = Routine.order("created_at desc")
+          @routines = Routine.order("created_at desc").includes([{:exercises => :primary_muscles}])
         elsif filter == "yours"
-          @routines = Routine.where(["creator_id = ?", user.id]).order("created_at desc")
+          @routines = Routine.where(["creator_id = ?", user.id]).order("created_at desc").includes([{:exercises => :primary_muscles}])
         else
-          @routines = Routine.order("created_at desc")
+          @routines = Routine.order("created_at desc").includes([{:exercises => :primary_muscles}])
         end
       else
         if filter == "all"
-          @routines = Routine.where(["name like ? or description like ?", "%#{query}%", "%#{query}%"]).order("created_at desc")
+          @routines = Routine.where(["name like ? or description like ?", "%#{query}%", "%#{query}%"]).order("created_at desc").includes([{:exercises => :primary_muscles}])
         elsif filter == "yours"
-          @routines = Routine.where(["creator_id = ? and (name like ? or description like ?)", user.id, "%#{query}%", "%#{query}%"]).order("created_at desc")
+          @routines = Routine.where(["creator_id = ? and (name like ? or description like ?)", user.id, "%#{query}%", "%#{query}%"]).order("created_at desc").includes([{:exercises => :primary_muscles}])
         else
-          @routines = Routine.where(["name like ? or description like ?", "%#{query}%", "%#{query}%"]).order("created_at desc")
+          @routines = Routine.where(["name like ? or description like ?", "%#{query}%", "%#{query}%"]).order("created_at desc").includes([{:exercises => :primary_muscles}])
         end
       end
 
@@ -46,17 +46,51 @@ class RoutineController < ApplicationController
         end
       end
 
+      primary_muscles_data = {}
+      @routines.each do |routine|
+        exercises = routine.exercises
+        if routine.id == 11
+          puts exercises
+        end
+        primary_muscles = exercises.map(&:primary_muscles).flatten.map(&:name).uniq()
+        primary_muscles_data[routine.id] = primary_muscles
+      end
+
       @response = {
         :routines => @routines,
+        :primary_muscles => primary_muscles_data,
         :user_routine_sessions => user_routine_sessions_data
       }
-
       respond_to do |format|
         format.html # index.html.erb
-        format.json { render json: @response.to_json }
+        format.json { render json: @response }
       end
     else
       render :nothing => true and return
+    end
+  end
+
+  def preview
+    # previews a routine
+    user = User.find_by_authentication_token(params[:auth_token])
+    routine_id = params[:routine_id].to_i
+    routine = Routine.find_by_id(routine_id)
+
+    if user.present? && routine.present?
+      primary_muscles = routine.exercises.includes(:primary_muscles).map(&:primary_muscles).flatten.map(&:name).uniq
+      secondary_muscles = routine.exercises.includes(:secondary_muscles).map(&:secondary_muscles).flatten.map(&:name).uniq
+      secondary_muscles.delete_if{|muscle|primary_muscles.include?(muscle)}
+    end
+
+    @response = {
+      :routine => routine,
+      :primary_muscles => primary_muscles,
+      :secondary_muscles => secondary_muscles
+    }
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @response.to_json }
     end
   end
 
